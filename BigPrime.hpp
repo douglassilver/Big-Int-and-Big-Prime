@@ -2,6 +2,11 @@
 #define BIGPRIME_HPP
 
 
+#include <random>
+#include <ctime>
+#include "BigInt.hpp"
+
+
 class BigPrime {           // 随机生成1024位大素数
 public:
 	BigPrime(): rand_eng(time(0)) { }
