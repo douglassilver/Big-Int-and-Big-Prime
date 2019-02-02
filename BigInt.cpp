@@ -291,6 +291,8 @@ BigInt operator*(const BigInt& lhs, const BigInt& rhs)
 	// 此时rhs二进制表示中有效位较少 
 	
 	BigInt ans(0), one(1);
+	ans.sign = (lhs.sign == rhs.sign);     // 同号为正，异号为负
+	
 	uint64_t rhs_top_top = 63;              // rhs最高字段的最高有效位位置
 	while (!(rhs.number.back() & (1ull << rhs_top_top))) --rhs_top_top;
 	for (uint64_t i = 0; i <= (rhs.number.size() - 1) * 64 + rhs_top_top; ++i) {
