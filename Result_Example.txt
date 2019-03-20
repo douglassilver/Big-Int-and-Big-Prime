@@ -1,4 +1,4 @@
-Here are some big prime in hexadecimal found by the program. It wound cost a long time to find one of them.
+Here are some big prime numbers in hexadecimal found by the program. It wound cost a long time to find one of them.
 
 0:
 6fd836fa30313a05 12c89ae52d5895a5 5829ffcb5aaffd78 3b18d2af2c732365 126af6d52545ef71 6ab168883319eb75 713687fc527e888b 08e483a43db44fd2 6b32755103ca9da0 6909d24026fdedd7 76e4cbc40ae1ee50 2cfcd47b7734d2d1 5877293e7cd07036 0122738e7906200d 360e9b8c18234edd 634a229011437359
