@@ -4,7 +4,8 @@
 static bool abs_compare(const std::deque<uint64_t>&, const std::deque<uint64_t>&);
 static std::deque<uint64_t> abs_add(const std::deque<uint64_t>&, const std::deque<uint64_t>&);           // 返回|a + b| Return abs(a + b)
 static std::deque<uint64_t> abs_minus(const std::deque<uint64_t>&, const std::deque<uint64_t>&);         // 返回|a - b| Return abs(a - b)
-// 求余辅助。返回尽量大的n使得a > (b << n) Assistant to calculate modulus, return maximum n which makes a > (
+uint64_t count_ones(const std::deque<uint64_t>&);   	// 乘法辅助
+// 求余辅助。返回尽量大的n使得a > (b << n) Assistant to calculate modulus
 static uint64_t abs_max_lshift(const std::deque<uint64_t>&, const std::deque<uint64_t>&);
 
 static bool abs_compare(const std::deque<uint64_t>& lhs, const std::deque<uint64_t>& rhs)       // 返回lhs < rhs
@@ -211,7 +212,7 @@ BigInt::operator bool() const
 	return !(number.size() == 1 && number.front() == 0);           // 绝对值为0
 }
 
-uint64_t BigInt::count_ones() const
+uint64_t count_ones(const std::deque<uint64_t>& number)
 {
 	uint64_t ans = 0;
 	for (auto seg : number) {
@@ -285,7 +286,7 @@ BigInt operator%(const BigInt& lhs, const BigInt& rhs)        // 由加减法实
 BigInt operator*(const BigInt& lhs, const BigInt& rhs)
 {
 	if (lhs == 0 || rhs == 0) return 0;                   // 特殊情况
-	else if (lhs.count_ones() < rhs.count_ones()) return rhs * lhs;       // 减少所需的加法操作
+	else if (count_ones(lhs.number) < count_ones(rhs.number)) return rhs * lhs;       // 减少所需的加法操作
 	// 此时rhs二进制表示中有效位较少 
 	
 	BigInt ans(0), one(1);
