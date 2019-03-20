@@ -1,10 +1,10 @@
 #include "BigInt.hpp"
 
-// 算术操作辅助
+// 算术操作辅助 Assistant to implement arithmetic
 static bool abs_compare(const std::deque<uint64_t>&, const std::deque<uint64_t>&);
-static std::deque<uint64_t> abs_add(const std::deque<uint64_t>&, const std::deque<uint64_t>&);           // 返回|a + b|
-static std::deque<uint64_t> abs_minus(const std::deque<uint64_t>&, const std::deque<uint64_t>&);         // 返回|a - b|
-// 求余辅助。返回尽量大的n使得a > (b << n)
+static std::deque<uint64_t> abs_add(const std::deque<uint64_t>&, const std::deque<uint64_t>&);           // 返回|a + b| Return abs(a + b)
+static std::deque<uint64_t> abs_minus(const std::deque<uint64_t>&, const std::deque<uint64_t>&);         // 返回|a - b| Return abs(a - b)
+// 求余辅助。返回尽量大的n使得a > (b << n) Assistant to calculate modulus, return maximum n which makes a > (
 static uint64_t abs_max_lshift(const std::deque<uint64_t>&, const std::deque<uint64_t>&);
 
 static bool abs_compare(const std::deque<uint64_t>& lhs, const std::deque<uint64_t>& rhs)       // 返回lhs < rhs
@@ -123,9 +123,9 @@ bool operator!=(const BigInt& lhs, const BigInt& rhs) { return !(lhs == rhs); }
 
 bool operator<(const BigInt& lhs, const BigInt& rhs)
 {
-	if (lhs.sign == false && rhs.sign == true) return true;
-	else if (lhs.sign == true && rhs.sign == false) return false;
-	else if (lhs.sign == true && rhs.sign == true) {
+	if (!lhs.sign && rhs.sign) return true;     // lhs为负，rhs为正
+	else if (lhs.sign && !rhs.sign) return false;      // lhs为正，rhs为负
+	else if (lhs.sign && rhs.sign) {               // lhs与rhs同为正
 		if (lhs.number.size() < rhs.number.size()) return true;
 		else if (lhs.number.size() > rhs.number.size()) return false;
 		else {   // lhs.number.size() == rhs.number.size()
@@ -135,8 +135,7 @@ bool operator<(const BigInt& lhs, const BigInt& rhs)
 			}
 			return false;       // 二者相等 
 		}
-	}
-	else {    // lhs.sign == false && rhs.sign == false。与上一种情况对称 
+	} else {    // !lhs.sign && !rhs.sign。与上一种情况对称
 		if (lhs.number.size() < rhs.number.size()) return false;
 		else if (lhs.number.size() > rhs.number.size()) return true;
 		else {
@@ -267,8 +266,7 @@ BigInt operator%(const BigInt& lhs, const BigInt& rhs)        // 由加减法实
 		if (ans.sign)  while (ans >= rhs) {
 			shift = abs_max_lshift(ans.number, rhs.number);
 			ans = ans - (rhs << shift);
-		}
-		else while (!ans.sign) {
+		} else while (!ans.sign) {
 			shift = abs_max_lshift(ans.number, rhs.number);
 			ans = ans + (rhs << shift);
 		}
@@ -276,8 +274,7 @@ BigInt operator%(const BigInt& lhs, const BigInt& rhs)        // 由加减法实
 		if (!ans.sign) while (ans <= rhs) {
 			shift = abs_max_lshift(ans.number, rhs.number);
 			ans = ans - (rhs << shift);
-		}
-		else while (ans.sign) {
+		} else while (ans.sign) {
 			shift = abs_max_lshift(ans.number, rhs.number);
 			ans = ans + (rhs << shift);
 		}
@@ -287,7 +284,8 @@ BigInt operator%(const BigInt& lhs, const BigInt& rhs)        // 由加减法实
 
 BigInt operator*(const BigInt& lhs, const BigInt& rhs)
 {
-	if (lhs.count_ones() < rhs.count_ones()) return rhs * lhs;       // 减少所需的加法操作
+	if (lhs == 0 || rhs == 0) return 0;                   // 特殊情况
+	else if (lhs.count_ones() < rhs.count_ones()) return rhs * lhs;       // 减少所需的加法操作
 	// 此时rhs二进制表示中有效位较少 
 	
 	BigInt ans(0), one(1);
@@ -305,7 +303,7 @@ BigInt operator*(const BigInt& lhs, const BigInt& rhs)
 
 std::ostream& operator<<(std::ostream& os, const BigInt& num)
 {
-	if (!num.sign) os << '-';
+	if (!num.sign) os << '-';           // 打印符号
 	os << std::hex << num.number.back();
 	std::ostringstream ostr;
 	for (int i = num.number.size() - 2; i >= 0; --i) {
