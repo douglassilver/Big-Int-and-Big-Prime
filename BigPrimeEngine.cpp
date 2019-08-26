@@ -1,29 +1,61 @@
-#include "BigPrime.hpp"
+#include "BigPrimeEngine.h"
 
-BigInt BigPrime::operator()()
+BigInt BigPrimeEngine::operator()()
 {
-    BigInt big = big_rand();
-    while (!miller_rabin_test(big)) big = big_rand();
-    return big;
+    // 子线程的最大数量
+    static const uint64_t MAXTHREAD = std::thread::hardware_concurrency()/2;
+
+    std::vector<std::thread> sub_threads;
+    int i;
+    big_prime = 0;
+
+    sub_threads.reserve(MAXTHREAD);
+    for (i=0; i<MAXTHREAD; ++i) sub_threads.emplace_back(sub_thread_find_prime, this);
+    for (auto& th:sub_threads) th.join();
+
+    return big_prime;
 }
 
-BigInt BigPrime::big_rand()
+void BigPrimeEngine::find_prime()
 {
-    constexpr int total_bits = 1024;              // 生成的随机数最大位数
     BigInt big;
+    bool found;
+    do {
+        big_prime_mutex.lock();
+        found = big_prime!=0;            // check if other threads have found a prime
+        big_prime_mutex.unlock();
+        if (found) return;
 
-    for (int shift = 0; shift < total_bits; shift += 32) {
-        big = big + (BigInt(rand_eng()) << shift);            // “连接”不同随机数形成更大的随机数
+        big = big_rand();
     }
-    if (!(big & 1)) big = big - 1;                   // 若为偶数则将结果减1
-    return big;
+    while (!miller_rabin_test(big));
+
+    big_prime_mutex.lock();
+    big_prime = std::move(big);
+    big_prime_mutex.unlock();
+}
+
+void sub_thread_find_prime(BigPrimeEngine* prime_eng) { prime_eng->find_prime(); }
+
+BigInt BigPrimeEngine::big_rand()
+{
+    static int count = 0;
+    printf("%d call big_rand()\n", ++count);
+
+    BigInt rand_big;
+    int shift;
+    for (shift = 0; shift < total_bit; shift += 32) {
+        rand_big = rand_big + (BigInt(rand_eng()) << shift);            // “连接”不同随机数形成更大的随机数
+    }
+    if (!(rand_big & 1)) rand_big = rand_big - 1;                   // 若为偶数则将结果减1
+    return rand_big;
 }
 
 /* 原型：CLRS P568 MILLER-RABIN */
-bool BigPrime::miller_rabin_test(const BigInt &big)
+bool BigPrimeEngine::miller_rabin_test(const BigInt &big)
 {
-    constexpr int check_time = 50;         // 随机选取的用于检测的值的个数
-    for (int i = 0; i < check_time; ++i) {
+    constexpr int CHECK = 50;         // 随机选取的用于检测的值的个数
+    for (int i = 0; i < CHECK; ++i) {
         if (check_evidence(big, rand_eng() % 0xffffffff)) return false;
     }
     return true;
@@ -42,7 +74,7 @@ BigInt mod_expon(const BigInt& a, const BigInt& b, const BigInt& n)          // 
 
 
 /* 原型：CLRS P567 WITNESS */
-bool BigPrime::check_evidence(const BigInt& big, unsigned evid)          // big应为奇数
+bool BigPrimeEngine::check_evidence(const BigInt& big, unsigned evid)          // big应为奇数
 {
     if (evid == 0) evid = 2;
     BigInt u, curr_x, last_x, one(1);

@@ -4,22 +4,33 @@
 
 #include <random>
 #include <ctime>
-#include "BigInt.hpp"
+#include <thread>
+#include <mutex>
+#include <vector>
+#include "BigInt.h"
 
 
-class BigPrime {           // 随机生成1024位大素数
+class BigPrimeEngine {           // 随机生成基于BigInt的大素数
 public:
-	BigPrime(): rand_eng(time(0)) { }
+	BigPrimeEngine(): rand_eng(static_cast<unsigned>(time(nullptr))) { }
 	BigInt operator()();                 // 调用返回一个大素数
 
 private:
+	unsigned total_bit = 512;                // 生成素数的位数
 	std::default_random_engine rand_eng;          // 随机数生成器，调用返回unsigned类型的随机值
-	BigInt big_rand();          // 生成1024位随机大奇数
-	bool check_evidence(const BigInt &, unsigned);              // 检查给定数是大数为合数的证据则返回true
+	BigInt big_prime;
+	std::mutex big_prime_mutex;
+	void find_prime();
+	friend void sub_thread_find_prime(BigPrimeEngine* prime_eng);
+
+	BigInt big_rand();          // 生成随机大奇数
 	bool miller_rabin_test(const BigInt &);             // Miller-Rabin素数测试，若测试为素数则返回true
+	bool check_evidence(const BigInt &, unsigned);              // 检查给定数是大数为合数的证据则返回true
 };
 
-BigInt mod_expon(const BigInt& a, const BigInt& b, const BigInt& n);           // 求模取幂
+void sub_thread_find_prime(BigPrimeEngine* prime_eng);
+
+BigInt mod_expon(const BigInt&, const BigInt&, const BigInt&);           // 求模取幂
 BigInt euclid_gcd(BigInt, BigInt);                // 欧几里得算法计算最大公约数
 
 
