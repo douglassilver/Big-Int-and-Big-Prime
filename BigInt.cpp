@@ -1,11 +1,11 @@
-#include "BigInt.hpp"
+#include "BigInt.h"
 
 // 算术操作辅助 Assistant to implement arithmetic
 static bool abs_compare(const std::deque<uint64_t>&, const std::deque<uint64_t>&);
 static std::deque<uint64_t> abs_add(const std::deque<uint64_t>&, const std::deque<uint64_t>&);           // 返回|a + b| Return abs(a + b)
 static std::deque<uint64_t> abs_minus(const std::deque<uint64_t>&, const std::deque<uint64_t>&);         // 返回|a - b| Return abs(a - b)
 uint64_t count_ones(const std::deque<uint64_t>&);   	// 乘法辅助
-// 求余辅助。返回尽量大的n使得a > (b << n) Assistant to calculate modulus
+// 除法辅助。返回尽量大的n使得a > (b << n) Assist for division
 static uint64_t abs_max_lshift(const std::deque<uint64_t>&, const std::deque<uint64_t>&);
 
 static bool abs_compare(const std::deque<uint64_t>& lhs, const std::deque<uint64_t>& rhs)       // 返回lhs < rhs
@@ -13,7 +13,7 @@ static bool abs_compare(const std::deque<uint64_t>& lhs, const std::deque<uint64
 	if (lhs.size() < rhs.size()) return true;
 	else if (lhs.size() > rhs.size()) return false;
 	else {   // lhs.size() == rhs.size()
-		for (int i = lhs.size() - 1; i >= 0; --i) {        // 从高位到低位依次比较
+		for (int i = static_cast<int>(lhs.size()-1); i >= 0; --i) {        // 从高位到低位依次比较
 			if (lhs[i] < rhs[i]) return true;
 			else if (lhs[i] > rhs[i]) return false;
 		}
@@ -31,12 +31,12 @@ static std::deque<uint64_t> abs_add(const std::deque<uint64_t>& lhs, const std::
 		else carry_bit = 0;
 	}
 	// 最多执行其中一个for
-	for (int i = lhs.size(); i < rhs.size(); ++i) {             // 若rhs更长（更长指deque有更高项）
+	for (auto i = lhs.size(); i < rhs.size(); ++i) {             // 若rhs更长（更长指deque有更高项）
 		ans.push_back(rhs[i] + carry_bit);
 		if (rhs[i] + carry_bit < rhs[i]) carry_bit = 1;               // 检测上溢
 		else carry_bit = 0;
 	}
-	for (int i = rhs.size(); i < lhs.size(); ++i) {             // 若lhs更长
+	for (auto i = rhs.size(); i < lhs.size(); ++i) {             // 若lhs更长
 		ans.push_back(lhs[i] + carry_bit);
 		if (lhs[i] + carry_bit < lhs[i]) carry_bit = 1;
 		else carry_bit = 0;
@@ -58,7 +58,7 @@ static std::deque<uint64_t> abs_minus(const std::deque<uint64_t>& lhs, const std
 		if (lhs[i] - borrow_bit - rhs[i] > lhs[i] || (borrow_bit && rhs[i] + borrow_bit == 0)) borrow_bit = 1;         // 检测下溢
 		else borrow_bit = 0;
 	}
-	for (int i = rhs.size(); i < lhs.size(); ++i) {          // 若lhs更长
+	for (auto i = rhs.size(); i < lhs.size(); ++i) {          // 若lhs更长
 		ans.push_back(lhs[i] - borrow_bit);
 		if (lhs[i] - borrow_bit > lhs[i]) borrow_bit = 1;
 		else borrow_bit = 0;
@@ -92,29 +92,22 @@ BigInt::BigInt(): sign(true) { number.push_back(0); }
 
 BigInt::BigInt(int64_t n): sign(n >= 0)
 {
-	number.push_back(std::abs(n));
+	number.push_back(static_cast<uint64_t>(std::abs(n)));
 }
-
-BigInt::BigInt(const BigInt& num): number(num.number), sign(num.sign) { }
 
 BigInt::BigInt(BigInt&& num) noexcept: number(std::move(num.number)), sign(num.sign) { }
-
-BigInt& BigInt::operator=(const BigInt& num)
-{
-	number = num.number;
-	sign = num.sign;
-}
 
 BigInt& BigInt::operator=(BigInt&& num) noexcept
 {
 	number = std::move(num.number);
 	sign = num.sign;
+	return *this;
 }
 
 bool operator==(const BigInt& lhs, const BigInt& rhs)
 {
 	if (lhs.sign != rhs.sign || lhs.number.size() != rhs.number.size()) return false;
-	for (int i = lhs.number.size() - 1; i >= 0; --i) {
+	for (int i = static_cast<int>(lhs.number.size()-1); i >= 0; --i) {
 		if (lhs.number[i] != rhs.number[i]) return false;
 	}
 	return true;
@@ -130,7 +123,7 @@ bool operator<(const BigInt& lhs, const BigInt& rhs)
 		if (lhs.number.size() < rhs.number.size()) return true;
 		else if (lhs.number.size() > rhs.number.size()) return false;
 		else {   // lhs.number.size() == rhs.number.size()
-			for (int i = lhs.number.size() - 1; i >= 0; --i) {        // 从高位到低位依次比较 
+			for (int i = static_cast<int>(lhs.number.size()-1); i >= 0; --i) {        // 从高位到低位依次比较
 				if (lhs.number[i] < rhs.number[i]) return true;
 				else if (lhs.number[i] > rhs.number[i]) return false;
 			}
@@ -140,7 +133,7 @@ bool operator<(const BigInt& lhs, const BigInt& rhs)
 		if (lhs.number.size() < rhs.number.size()) return false;
 		else if (lhs.number.size() > rhs.number.size()) return true;
 		else {
-			for (int i = lhs.number.size() - 1; i >= 0; --i) { 
+			for (int i = static_cast<int>(lhs.number.size()-1); i >= 0; --i) {
 				if (lhs.number[i] < rhs.number[i]) return false;
 				else if (lhs.number[i] > rhs.number[i]) return true;
 			}
@@ -161,7 +154,7 @@ BigInt BigInt::operator<<(uint64_t shift) const
 	const uint64_t s = shift % 64;         // 实际须移动的位数
 	if (s) {          // 段内移位
 		ans.number.push_back(ans.number.back() >> (64 - s));         // 从高位开始处理
-		for (int i = ans.number.size() - 2; i > 0; --i) {
+		for (int i = static_cast<int>(ans.number.size()-2); i > 0; --i) {
 			ans.number[i] = (ans.number[i] << s) + (ans.number[i-1] >> (64 - s));
 		}
 		ans.number[0] <<= s;
@@ -195,16 +188,30 @@ uint64_t BigInt::bit_size() const
     return (number.size() - 1) * 64 + top + 1;
 }
 
-BigInt operator&(const BigInt& lhs, const BigInt& rhs)
+static BigInt bit_operation(const BigInt& lhs, const BigInt& rhs, BitOperate bit_operate)
 {
 	uint64_t common_size = lhs.number.size() <= rhs.number.size() ? lhs.number.size() : rhs.number.size();
 	BigInt ans;
-	ans.number[0] = lhs.number[0] & rhs.number[0];           // 最低字段初始化时已存在
+	ans.number[0] = bit_operate(lhs.number[0], rhs.number[0]);           // 最低字段初始化时已存在
 	for (uint64_t i = 1; i < common_size; ++i) ans.number.push_back(lhs.number[i] & rhs.number[i]);
 
 	while (ans.number.size() > 1 && ans.number.back() == 0) ans.number.pop_back();             // 去除前缀0
-
 	return ans;
+}
+
+BigInt operator&(const BigInt& lhs, const BigInt& rhs)
+{
+	return bit_operation(lhs, rhs, [](uint64_t x, uint64_t y){ return x&y; });
+}
+
+BigInt operator|(const BigInt& lhs, const BigInt& rhs)
+{
+	return bit_operation(lhs, rhs, [](uint64_t x, uint64_t y){ return x|y; });
+}
+
+BigInt operator^(const BigInt& lhs, const BigInt& rhs)
+{
+	return bit_operation(lhs, rhs, [](uint64_t x, uint64_t y){ return x^y; });
 }
 
 BigInt::operator bool() const
@@ -259,28 +266,55 @@ BigInt operator-(const BigInt& lhs, const BigInt& rhs)
 	return ans;
 }
 
-BigInt operator%(const BigInt& lhs, const BigInt& rhs)        // 由加减法实现 
+static std::pair<BigInt, BigInt> divide_with_remainder(const BigInt& lhs, const BigInt& rhs)
+// 由加减法实现带余除法，lhs÷rhs
 {
-	BigInt ans = lhs;
+	if (rhs==0) exit(-1);          // 除数不能为零 Divisor can't be zero
+
+	BigInt quotient = 0, remainder = lhs;
 	uint64_t shift;
-	if (rhs.sign) {        // ans应与rhs同号 
-		if (ans.sign)  while (ans >= rhs) {
-			shift = abs_max_lshift(ans.number, rhs.number);
-			ans = ans - (rhs << shift);
-		} else while (!ans.sign) {
-			shift = abs_max_lshift(ans.number, rhs.number);
-			ans = ans + (rhs << shift);
+	if (rhs.sign) {        // remainder应与rhs同号
+		if (lhs.sign) {
+			while (remainder >= rhs) {
+				shift = abs_max_lshift(remainder.number, rhs.number);
+				remainder = remainder - (rhs << shift);
+				quotient = quotient + (BigInt(1) << shift);
+			}
+		}
+		else {
+			while (!remainder.sign) {
+				shift = abs_max_lshift(remainder.number, rhs.number);
+				remainder = remainder + (rhs << shift);
+				quotient = quotient - (BigInt(1) << shift);
+			}
 		}
 	} else {
-		if (!ans.sign) while (ans <= rhs) {
-			shift = abs_max_lshift(ans.number, rhs.number);
-			ans = ans - (rhs << shift);
-		} else while (ans.sign) {
-			shift = abs_max_lshift(ans.number, rhs.number);
-			ans = ans + (rhs << shift);
+		if (!lhs.sign) {
+			while (remainder <= rhs) {
+				shift = abs_max_lshift(remainder.number, rhs.number);
+				remainder = remainder - (rhs << shift);
+				quotient = quotient + (BigInt(1) << shift);
+			}
+		}
+		else {
+			while (remainder.sign) {
+				shift = abs_max_lshift(remainder.number, rhs.number);
+				remainder = remainder + (rhs << shift);
+				quotient = quotient - (BigInt(1) << shift);
+			}
 		}
 	}
-	return ans;
+	return std::make_pair(quotient, remainder);
+}
+
+BigInt operator/(const BigInt& lhs, const BigInt& rhs)
+{
+	return divide_with_remainder(lhs, rhs).first;
+}
+
+BigInt operator%(const BigInt& lhs, const BigInt& rhs)
+{
+	return divide_with_remainder(lhs, rhs).second;
 }
 
 BigInt operator*(const BigInt& lhs, const BigInt& rhs)
@@ -307,11 +341,11 @@ std::ostream& operator<<(std::ostream& os, const BigInt& num)
 	if (!num.sign) os << '-';           // 打印符号
 	os << std::hex << num.number.back();
 	std::ostringstream ostr;
-	for (int i = num.number.size() - 2; i >= 0; --i) {
+	for (int i = static_cast<int>(num.number.size()-2); i >= 0; --i) {
 		os << ' ';          // 将输出按每64bit间隔输出
 		ostr.str("");         //  清空ostringstream
 		ostr << std::hex << num.number[i];
-		int rest = 16 - ostr.str().size();          // 计算该段前缀0的个数
+		auto rest = 16 - ostr.str().size();          // 计算该段前缀0的个数
 		while (rest--) os << '0';
 		os << std::hex << num.number[i];
 	}
