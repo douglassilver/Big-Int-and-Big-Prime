@@ -39,9 +39,6 @@ void sub_thread_find_prime(BigPrimeEngine* prime_eng) { prime_eng->find_prime();
 
 BigInt BigPrimeEngine::big_rand()
 {
-    static int count = 0;
-    printf("%d call big_rand()\n", ++count);
-
     BigInt rand_big;
     int shift;
     for (shift = 0; shift < total_bit; shift += 32) {
